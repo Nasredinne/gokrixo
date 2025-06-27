@@ -1,0 +1,10 @@
+{
+    "fillname":"nasredine ghellale",
+    "number":"01234567",
+    "email": "SWILLE7500@gmail.com",
+    "password": "azertyué&rezerA1!",
+    "position":"azertyué&rezerA1!",
+    "experience":"aerzrttyuyuioytrezaa  zerttyuyioilkjhfgdsffghjgfgdfsffgghjhjk",
+    "message":"eazrertyjhfdfsfgndf",
+    "isaccepted": false
+}
