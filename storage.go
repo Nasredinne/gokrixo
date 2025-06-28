@@ -3,6 +3,8 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"log"
+	"os"
 
 	_ "github.com/lib/pq"
 	"golang.org/x/crypto/bcrypt"
@@ -24,12 +26,32 @@ type PostgresStore struct {
 }
 
 func NewPostgresStore() (*PostgresStore, error) {
-	connStr := "host=postgres://postgreskrixo_user:bFaObNSTztS3ZlgJ8uGt7F2SF7gfH8Uz@dpg-d1fjthvfte5s73fk4sgg-a/postgreskrixo port=5432 user=postgreskrixo_user dbname=postgreskrixo password=bFaObNSTztS3ZlgJ8uGt7F2SF7gfH8Uz sslmode=disable"
+	//connStr := "host=postgres://postgreskrixo_user:bFaObNSTztS3ZlgJ8uGt7F2SF7gfH8Uz@dpg-d1fjthvfte5s73fk4sgg-a/postgreskrixo port=5432 user=postgreskrixo_user dbname=postgreskrixo password=bFaObNSTztS3ZlgJ8uGt7F2SF7gfH8Uz sslmode=disable"
 
-	db, err := sql.Open("postgres", connStr)
+	// db, err := sql.Open("postgres", connStr)
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	dsn := fmt.Sprintf(
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+		os.Getenv("DB_HOST"),
+		os.Getenv("DB_PORT"),
+		os.Getenv("DB_USER"),
+		os.Getenv("DB_PASSWORD"),
+		os.Getenv("DB_NAME"),
+	)
+	db, err := sql.Open("postgres", dsn)
 	if err != nil {
-		return nil, err
+		log.Fatal(err)
 	}
+
+	err = db.Ping()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Println("Connected to the database!")
 
 	if err := db.Ping(); err != nil {
 		return nil, err
