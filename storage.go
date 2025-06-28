@@ -24,7 +24,7 @@ type PostgresStore struct {
 }
 
 func NewPostgresStore() (*PostgresStore, error) {
-	connStr := "host=postgresql://postgreskrixo_user:bFaObNSTztS3ZlgJ8uGt7F2SF7gfH8Uz@dpg-d1fjthvfte5s73fk4sgg-a/postgreskrixo port=5432 user=postgreskrixo_user dbname=postgreskrixo password=bFaObNSTztS3ZlgJ8uGt7F2SF7gfH8Uz sslmode=disable"
+	connStr := "host=postgres://postgreskrixo_user:bFaObNSTztS3ZlgJ8uGt7F2SF7gfH8Uz@dpg-d1fjthvfte5s73fk4sgg-a/postgreskrixo port=5432 user=postgreskrixo_user dbname=postgreskrixo password=bFaObNSTztS3ZlgJ8uGt7F2SF7gfH8Uz sslmode=disable"
 
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
