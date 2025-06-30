@@ -16,7 +16,7 @@ type CreateCommandRequest struct {
 	Flor        string `json:"flor"`
 	Itemtype    string `json:"itemtype"`
 	Service     string `json:"service"`
-	Workers     int    `json:"workers"`
+	Workers     string `json:"workers"`
 	Start       string `json:"start"`
 	Distination string `json:"distination"`
 }
@@ -28,7 +28,7 @@ type Command struct {
 	Flor        string `json:"flor"`
 	Itemtype    string `json:"itemtype"`
 	Service     string `json:"service"`
-	Workers     int    `json:"workers"`
+	Workers     string `json:"workers"`
 	Start       string `json:"start"`
 	Distination string `json:"distination"`
 }
