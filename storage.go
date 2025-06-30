@@ -82,11 +82,11 @@ func (s *PostgresStore) createCommandTable() error {
 	query := `create table if not exists commands (
 		id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 		fullname varchar(100) NOT NULL,
-		number serial NOT NULL,
+		number varchar(100) NOT NULL,
 		flor varchar(100) NOT NULL,
 		itemtype varchar(100) NOT NULL,
 		services varchar(100) NOT NULL,
-		workers serial NOT NULL,
+		workers varchar(100) NOT NULL,
 		start varchar(100) NOT NULL,
 		distination varchar(100) NOT NULL
 	);`
