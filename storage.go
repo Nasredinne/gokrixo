@@ -98,7 +98,7 @@ func (s *PostgresStore) createCommandTable() error {
 func (s *PostgresStore) CreateCommand(acc *Command) error {
 	query := `insert into commands 
 	(fullname, number, flor, itemtype, services, workers, start, distination)
-	values ($1, $2, $3, $4, $5, $6)`
+	values ($1, $2, $3, $4, $5, $6, $7, $8)`
 
 	_, err := s.db.Query(
 		query,
