@@ -22,7 +22,7 @@ type CreateCommandRequest struct {
 }
 
 type Command struct {
-	ID          int    `json:"id"`
+	ID          string `json:"id"`
 	FullName    string `json:"fullname"`
 	Number      string `json:"number"`
 	Flor        string `json:"flor"`
