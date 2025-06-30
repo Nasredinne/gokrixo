@@ -41,6 +41,7 @@ func enableCors(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*") // Or your frontend origin
 	(*w).Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 	(*w).Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	(*w).Header().Set("Access-Control-Allow-Credentials", "true")
 }
 
 func (s *APIServer) handleCreateCommand(w http.ResponseWriter, r *http.Request) error {
