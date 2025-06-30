@@ -8,3 +8,29 @@
     "message":"eazrertyjhfdfsfgndf",
     "isaccepted": false
 }
+
+
+Command : 
+
+{
+    "fullname":"nasredine ghellale",
+    "number":"01234567",
+    "flor": "SWILLE7500@gmail.com",
+    "password": "azertyué&rezerA1!",
+    "itemtype":"azertyué&rezerA1!",
+    "service":"aerzrttyuyuioytrezaa  zerttyuyioilkjhfgdsffghjgfgdfsffgghjhjk",
+    "workers":"eazrertyjhfdfsfgndf",
+    "start": "distination"
+}
+
+
+type CreateCommandRequest struct {
+	FullName    string `json:"fullname"`
+	Number      string `json:"number"`
+	Flor        string `json:"flor"`
+	Itemtype    string `json:"itemtype"`
+	Service     string `json:"service"`
+	Workers     string `json:"workers"`
+	Start       string `json:"start"`
+	Distination string `json:"distination"`
+}
