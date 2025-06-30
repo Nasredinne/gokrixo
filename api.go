@@ -25,9 +25,9 @@ func NewAPIServer(listenAddr string, store Storage) *APIServer {
 func (s *APIServer) Run() {
 	router := mux.NewRouter()
 
-	router.HandleFunc("/CreateCommand", makeHTTPHandleFunc(s.handleCreateCommand))
+	router.HandleFunc("/CreateCommand", corsMiddleware(makeHTTPHandleFunc(s.handleCreateCommand)))
 	router.HandleFunc("/GetCommands", makeHTTPHandleFunc(s.handleGetCommands))
-	router.HandleFunc("/CreateWorker", makeHTTPHandleFunc(s.handleCreateWorker))
+	router.HandleFunc("/CreateWorker", corsMiddleware(makeHTTPHandleFunc(s.handleCreateWorker)))
 	router.HandleFunc("/GetWorkers", makeHTTPHandleFunc(s.handleGetWorkers))
 	router.HandleFunc("/Regestration", makeHTTPHandleFunc(s.handleRegestration))
 	router.HandleFunc("/account/{id}", withJWTAuth(makeHTTPHandleFunc(s.handleGetWorkerByID), s.store))
@@ -42,6 +42,28 @@ func enableCors(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 	(*w).Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	(*w).Header().Set("Access-Control-Allow-Credentials", "true")
+}
+
+func corsMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Allowed Origin
+		w.Header().Set("Access-Control-Allow-Origin", "*") // Change this to your frontend origin
+		// Allowed Methods
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		// Allowed Headers
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
+
+		// Handle Preflight Request
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		// Proceed to actual request
+		next.ServeHTTP(w, r)
+	}
 }
 
 func (s *APIServer) handleCreateCommand(w http.ResponseWriter, r *http.Request) error {
