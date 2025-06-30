@@ -29,7 +29,7 @@ func (s *APIServer) Run() {
 	router.HandleFunc("/GetCommands", makeHTTPHandleFunc(s.handleGetCommands))
 	router.HandleFunc("/CreateWorker", corsMiddleware(makeHTTPHandleFunc(s.handleCreateWorker)))
 	router.HandleFunc("/GetWorkers", makeHTTPHandleFunc(s.handleGetWorkers))
-	router.HandleFunc("/Regestration", makeHTTPHandleFunc(s.handleRegestration))
+	router.HandleFunc("/Regestration", corsMiddleware(makeHTTPHandleFunc(s.handleRegestration)))
 	router.HandleFunc("/account/{id}", withJWTAuth(makeHTTPHandleFunc(s.handleGetWorkerByID), s.store))
 
 	log.Println("JSON API server running on port: ", s.listenAddr)
@@ -67,7 +67,6 @@ func corsMiddleware(next http.HandlerFunc) http.HandlerFunc {
 }
 
 func (s *APIServer) handleCreateCommand(w http.ResponseWriter, r *http.Request) error {
-	enableCors(&w)
 	req := new(CreateCommandRequest)
 	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
 		return err
@@ -96,10 +95,6 @@ func (s *APIServer) handleGetCommands(w http.ResponseWriter, r *http.Request) er
 }
 
 func (s *APIServer) handleCreateWorker(w http.ResponseWriter, r *http.Request) error {
-	enableCors(&w)
-	if r.Method != "POST" {
-		return fmt.Errorf("methode not allowed %s", r.Method)
-	}
 
 	req := new(CreateWorkerRequest)
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
