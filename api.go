@@ -30,8 +30,11 @@ func (s *APIServer) Run() {
 	router.HandleFunc("/CreateWorker", corsMiddleware(makeHTTPHandleFunc(s.handleCreateWorker)))
 	router.HandleFunc("/GetWorkers", makeHTTPHandleFunc(s.handleGetWorkers))
 	router.HandleFunc("/Regestration", corsMiddleware(makeHTTPHandleFunc(s.handleRegestration)))
-	router.HandleFunc("/account/{id}", withJWTAuth(makeHTTPHandleFunc(s.handleGetWorkerByID), s.store))
-
+	router.HandleFunc("/account/{id}", corsMiddleware(withJWTAuth(makeHTTPHandleFunc(s.handleGetWorkerByID), s.store)))
+	router.HandleFunc("/UpdateCommand", corsMiddleware(makeHTTPHandleFunc(s.handleUpdateCommand)))
+	router.HandleFunc("/UpdateUpdate", corsMiddleware(makeHTTPHandleFunc(s.handleUpdateWorker)))
+	router.HandleFunc("/DeleteCommand", corsMiddleware(makeHTTPHandleFunc(s.handleDeleteCommand)))
+	router.HandleFunc("/DeleteDataBaseTables", corsMiddleware(makeHTTPHandleFunc(s.handleDeleteDBTables)))
 	log.Println("JSON API server running on port: ", s.listenAddr)
 
 	http.ListenAndServe(s.listenAddr, router)
@@ -66,13 +69,18 @@ func corsMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
+func (s *APIServer) handleDeleteDBTables(w http.ResponseWriter, r *http.Request) error {
+	s.store.DropAllTables()
+	return WriteJSON(w, http.StatusAccepted, "TABLES DELETED")
+}
+
 func (s *APIServer) handleCreateCommand(w http.ResponseWriter, r *http.Request) error {
 	req := new(CreateCommandRequest)
 	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
 		return err
 	}
 
-	command, err := NewCommand(req.FullName, req.Number, req.Flor, req.Itemtype, req.Service, req.Workers, req.Start, req.Distination)
+	command, err := NewCommand(req.FullName, req.Number, req.Flor, req.Itemtype, req.Service, req.Workers, req.Start, req.Distination, req.Prix, req.IsAccepted)
 	if err != nil {
 		return err
 	}
@@ -181,6 +189,46 @@ func (s *APIServer) handleRegestration(w http.ResponseWriter, r *http.Request) e
 	})
 
 	return WriteJSON(w, http.StatusOK, resp)
+}
+
+func (s *APIServer) handleUpdateCommand(w http.ResponseWriter, r *http.Request) error {
+	req := new(Command)
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return err
+	}
+	err := s.store.UpdateCommand(req)
+	if err != nil {
+		return WriteJSON(w, http.StatusResetContent, err)
+	}
+	return WriteJSON(w, http.StatusAccepted, "Commend Updates Corectly")
+}
+
+func (s *APIServer) handleUpdateWorker(w http.ResponseWriter, r *http.Request) error {
+	req := new(Worker)
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return err
+	}
+	err := s.store.UpdateWorker(req)
+	if err != nil {
+		return WriteJSON(w, http.StatusResetContent, err)
+	}
+	return WriteJSON(w, http.StatusAccepted, "Worker Updates Corectly")
+}
+
+func (s *APIServer) handleDeleteCommand(w http.ResponseWriter, r *http.Request) error {
+	req := new(Command)
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return err
+	}
+	err := s.store.DeleteCommand(req)
+	if err != nil {
+		WriteJSON(w, http.StatusBadRequest, "Command Not Deleted")
+
+		return err
+
+	}
+	return WriteJSON(w, http.StatusAccepted, "Command Deleted")
+
 }
 
 func WriteJSON(w http.ResponseWriter, status int, v any) error {

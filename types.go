@@ -19,6 +19,8 @@ type CreateCommandRequest struct {
 	Workers     string `json:"workers"`
 	Start       string `json:"start"`
 	Distination string `json:"distination"`
+	Prix        string `json:"prise"`
+	IsAccepted  string `json:"isaccepted"`
 }
 
 type Command struct {
@@ -31,9 +33,11 @@ type Command struct {
 	Workers     string `json:"workers"`
 	Start       string `json:"start"`
 	Distination string `json:"distination"`
+	Prix        string `json:"prise"`
+	IsAccepted  string `json:"isaccepted"`
 }
 
-func NewCommand(fullname, number, flor, itemtype, service, workers, start, distination string) (*Command, error) {
+func NewCommand(fullname, number, flor, itemtype, service, workers, start, distination, prix, isaccepted string) (*Command, error) {
 	return &Command{
 		FullName:    fullname,
 		Number:      number,
@@ -43,6 +47,8 @@ func NewCommand(fullname, number, flor, itemtype, service, workers, start, disti
 		Workers:     workers,
 		Start:       start,
 		Distination: distination,
+		Prix:        prix,
+		IsAccepted:  isaccepted,
 	}, nil
 }
 

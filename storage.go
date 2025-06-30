@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"os"
 
 	_ "github.com/lib/pq"
 	"golang.org/x/crypto/bcrypt"
@@ -12,14 +11,18 @@ import (
 
 type Storage interface {
 	CreateCommand(*Command) error
-	DeleteCommand(int) error
+	DeleteCommand(*Command) error
 	GetCommands() ([]*Command, error)
 	CreateWorker(*Worker) error
 	GetWorkers() ([]*Worker, error)
 	Register(string, string) (*Worker, error)
-	GetWorkerByEmail(email string) (*Worker, error)
-	GetAccountByID(id string) (*Worker, error)
+	GetWorkerByEmail(string) (*Worker, error)
+	GetAccountByID(string) (*Worker, error)
 	createAdminTable() error
+	UpdateCommand(*Command) error
+	UpdateWorker(*Worker) error
+	DropTable(string) error
+	DropAllTables() error
 }
 
 type PostgresStore struct {
@@ -27,12 +30,12 @@ type PostgresStore struct {
 }
 
 func NewPostgresStore() (*PostgresStore, error) {
-	// connStr := "host=127.0.0.1 port=5432 user=postgres dbname=postgres password=gokrixo sslmode=disable"
+	connStr := "host=127.0.0.1 port=5432 user=postgres dbname=postgres password=gokrixo sslmode=disable"
 
-	// db, err := sql.Open("postgres", connStr)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	db, err := sql.Open("postgres", connStr)
+	if err != nil {
+		return nil, err
+	}
 
 	// dsn := fmt.Sprintf(
 	// 	"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
@@ -44,11 +47,11 @@ func NewPostgresStore() (*PostgresStore, error) {
 	// )
 
 	// DO THIS BEFORE PUSH
-	dsn := os.Getenv("DB_HOST")
-	db, err := sql.Open("postgres", dsn)
-	if err != nil {
-		log.Fatal(err)
-	}
+	// dsn := os.Getenv("DB_HOST")
+	// db, err := sql.Open("postgres", dsn)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 
 	err = db.Ping()
 	if err != nil {
@@ -79,7 +82,7 @@ func (s *PostgresStore) Init() error {
 }
 
 func (s *PostgresStore) createCommandTable() error {
-	query := `create table if not exists commandss (
+	query := `create table if not exists commandsss (
 		id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 		fullname varchar(100) NOT NULL,
 		number varchar(100) NOT NULL,
@@ -88,7 +91,9 @@ func (s *PostgresStore) createCommandTable() error {
 		services varchar(100) NOT NULL,
 		workers varchar(100) NOT NULL,
 		start varchar(100) NOT NULL,
-		distination varchar(100) NOT NULL
+		distination varchar(100) NOT NULL,
+		isaccepted varchar(100) NOT NULL,
+		prix varchar(100) NOT NULL
 	);`
 
 	_, err := s.db.Exec(query)
@@ -96,9 +101,9 @@ func (s *PostgresStore) createCommandTable() error {
 }
 
 func (s *PostgresStore) CreateCommand(acc *Command) error {
-	query := `insert into commandss 
-	(fullname, number, flor, itemtype, services, workers, start, distination)
-	values ($1, $2, $3, $4, $5, $6, $7, $8)`
+	query := `insert into commandsss 
+	(fullname, number, flor, itemtype, services, workers, start, distination, isaccepted, prix)
+	values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`
 
 	_, err := s.db.Query(
 		query,
@@ -109,7 +114,10 @@ func (s *PostgresStore) CreateCommand(acc *Command) error {
 		acc.Service,
 		acc.Workers,
 		acc.Start,
-		acc.Distination)
+		acc.Distination,
+		acc.IsAccepted,
+		acc.Prix,
+	)
 
 	if err != nil {
 		return err
@@ -118,13 +126,26 @@ func (s *PostgresStore) CreateCommand(acc *Command) error {
 	return nil
 }
 
-func (s *PostgresStore) DeleteCommand(id int) error {
-	_, err := s.db.Query("delete from commandss where id = $1", id)
-	return err
+func (s *PostgresStore) DeleteCommand(command *Command) error {
+	result, err := s.db.Exec("DELETE FROM commandsss WHERE id = $1", command.ID)
+	if err != nil {
+		return fmt.Errorf("failed to execute delete: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to retrieve affected rows: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("no command found with ID %v", command.ID)
+	}
+
+	return nil
 }
 
 func (s *PostgresStore) GetCommands() ([]*Command, error) {
-	rows, err := s.db.Query("select * from commandss ")
+	rows, err := s.db.Query("select * from commandsss ")
 	if err != nil {
 		return nil, err
 	}
@@ -239,7 +260,7 @@ func (s *PostgresStore) GetWorkerByEmail(email string) (*Worker, error) {
 		return scanIntoWorker(rows)
 	}
 
-	return nil, fmt.Errorf("account %s not found", email)
+	return nil, fmt.Errorf("Worker %s not found", email)
 }
 
 func (s *PostgresStore) GetAccountByID(id string) (*Worker, error) {
@@ -255,6 +276,65 @@ func (s *PostgresStore) GetAccountByID(id string) (*Worker, error) {
 	return nil, fmt.Errorf("account %s not found", id)
 }
 
+func (s *PostgresStore) GetCommandByID(id string) (*Command, error) {
+	rows, err := s.db.Query("select * from commandsss where id = $1", id)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		return scanIntoAccount(rows)
+	}
+
+	return nil, fmt.Errorf("command %s not found", id)
+}
+
+func (s *PostgresStore) UpdateCommand(command *Command) error {
+
+	query := `
+		UPDATE commandsss
+		SET isaccepted = $1
+		WHERE id = $2
+	`
+	result, err := s.db.Exec(query, command.IsAccepted, command.ID)
+	if err != nil {
+		return fmt.Errorf("failed to execute update query: %w", err)
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to retrieve affected rows: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("no command found with ID %s", command.ID)
+	}
+
+	return nil
+}
+
+func (s *PostgresStore) UpdateWorker(worker *Worker) error {
+
+	query := `
+		UPDATE worker
+		SET isaccepted = $1
+		WHERE id = $2
+	`
+	result, err := s.db.Exec(query, worker.IsAccepted, worker.ID)
+	if err != nil {
+		return fmt.Errorf("failed to execute update query: %w", err)
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to retrieve affected rows: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("no worker found with ID %s", worker.ID)
+	}
+
+	return nil
+}
+
 func scanIntoAccount(rows *sql.Rows) (*Command, error) {
 	command := new(Command)
 	err := rows.Scan(
@@ -266,7 +346,10 @@ func scanIntoAccount(rows *sql.Rows) (*Command, error) {
 		&command.Service,
 		&command.Workers,
 		&command.Start,
-		&command.Distination)
+		&command.Distination,
+		&command.IsAccepted,
+		&command.Prix,
+	)
 
 	return command, err
 }
@@ -296,4 +379,57 @@ func (s *PostgresStore) createAdminTable() error {
 
 	_, err := s.db.Exec(query)
 	return err
+}
+
+func (s *PostgresStore) DropTable(tableName string) error {
+	query := fmt.Sprintf("DROP TABLE IF EXISTS %s CASCADE", tableName)
+
+	_, err := s.db.Exec(query)
+	if err != nil {
+		return fmt.Errorf("failed to drop table %s: %w", tableName, err)
+	}
+
+	fmt.Printf("Table %s dropped successfully.\n", tableName)
+	return nil
+}
+
+func (s *PostgresStore) DropAllTables() error {
+	// Query to list all user-defined tables in the public schema
+	rows, err := s.db.Query(`
+		SELECT tablename
+		FROM pg_tables
+		WHERE schemaname = 'public'
+	`)
+	if err != nil {
+		return fmt.Errorf("failed to list tables: %w", err)
+	}
+	defer rows.Close()
+
+	var tableName string
+	var tables []string
+
+	for rows.Next() {
+		if err := rows.Scan(&tableName); err != nil {
+			return fmt.Errorf("failed to scan table name: %w", err)
+		}
+		tables = append(tables, tableName)
+	}
+
+	if len(tables) == 0 {
+		fmt.Println("No tables found to drop.")
+		return nil
+	}
+
+	// Drop each table
+	for _, table := range tables {
+		query := fmt.Sprintf("DROP TABLE IF EXISTS %s CASCADE", table)
+		_, err := s.db.Exec(query)
+		if err != nil {
+			return fmt.Errorf("failed to drop table %s: %w", table, err)
+		}
+		fmt.Printf("Dropped table: %s\n", table)
+	}
+
+	fmt.Println("All tables dropped successfully.")
+	return nil
 }
