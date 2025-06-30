@@ -12,7 +12,9 @@ type LoginRequest struct {
 
 type CreateCommandRequest struct {
 	FullName    string `json:"fullname"`
-	Phone       string `json:"phone"`
+	Number      string `json:"number"`
+	Flor        string `json:"flor"`
+	Itemtype    string `json:"itemtype"`
 	Service     string `json:"service"`
 	Workers     string `json:"workers"`
 	Start       string `json:"start"`
@@ -21,18 +23,22 @@ type CreateCommandRequest struct {
 
 type Command struct {
 	ID          int    `json:"id"`
-	FullName    string `json:"firstName"`
+	FullName    string `json:"firstname"`
 	Number      string `json:"number"`
+	Flor        string `json:"flor"`
+	Itemtype    string `json:"itemtype"`
 	Service     string `json:"service"`
 	Workers     string `json:"workers"`
 	Start       string `json:"start"`
 	Distination string `json:"distination"`
 }
 
-func NewCommand(fullname, number, service, workers, start, distination string) (*Command, error) {
+func NewCommand(fullname, number, flor, itemtype, service, workers, start, distination string) (*Command, error) {
 	return &Command{
 		FullName:    fullname,
 		Number:      number,
+		Flor:        flor,
+		Itemtype:    itemtype,
 		Service:     service,
 		Workers:     workers,
 		Start:       start,

@@ -16,7 +16,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	server := NewAPIServer(":3000", store)
+	server := NewAPIServer("0.0.0.0:3000", store)
 	fmt.Println("Coonectect to server ")
 	server.Run()
 }

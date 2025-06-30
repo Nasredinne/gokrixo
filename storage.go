@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"os"
 
 	_ "github.com/lib/pq"
 	"golang.org/x/crypto/bcrypt"
@@ -19,6 +18,7 @@ type Storage interface {
 	Register(string, string) (*Worker, error)
 	GetWorkerByEmail(email string) (*Worker, error)
 	GetAccountByID(id string) (*Worker, error)
+	createAdminTable() error
 }
 
 type PostgresStore struct {
@@ -26,12 +26,12 @@ type PostgresStore struct {
 }
 
 func NewPostgresStore() (*PostgresStore, error) {
-	//connStr := "host=postgres://postgreskrixo_user:bFaObNSTztS3ZlgJ8uGt7F2SF7gfH8Uz@dpg-d1fjthvfte5s73fk4sgg-a/postgreskrixo port=5432 user=postgreskrixo_user dbname=postgreskrixo password=bFaObNSTztS3ZlgJ8uGt7F2SF7gfH8Uz sslmode=disable"
+	connStr := "host=127.0.0.1 port=5432 user=postgres dbname=postgres password=gokrixo sslmode=disable"
 
-	// db, err := sql.Open("postgres", connStr)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	db, err := sql.Open("postgres", connStr)
+	if err != nil {
+		return nil, err
+	}
 
 	// dsn := fmt.Sprintf(
 	// 	"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
@@ -41,11 +41,13 @@ func NewPostgresStore() (*PostgresStore, error) {
 	// 	os.Getenv("DB_PASSWORD"),
 	// 	os.Getenv("DB_NAME"),
 	// )
-	dsn := os.Getenv("DB_HOST")
-	db, err := sql.Open("postgres", dsn)
-	if err != nil {
-		log.Fatal(err)
-	}
+
+	// DO THIS BEFORE PUSH
+	// dsn := os.Getenv("DB_HOST")
+	// db, err := sql.Open("postgres", dsn)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 
 	err = db.Ping()
 	if err != nil {
@@ -78,12 +80,14 @@ func (s *PostgresStore) Init() error {
 func (s *PostgresStore) createCommandTable() error {
 	query := `create table if not exists command (
 		id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-		fullname varchar(100),
-		number serial,
-		services varchar(100),
-		workers serial,
-		start varchar(100),
-		distination varchar(100)
+		fullname varchar(100) NOT NULL,
+		number serial NOT NULL,
+		flor varchar(100) NOT NULL,
+		itemtype varchar(100) NOT NULL,
+		services varchar(100) NOT NULL,
+		workers serial NOT NULL,
+		start varchar(100) NOT NULL,
+		distination varchar(100) NOT NULL
 	);`
 
 	_, err := s.db.Exec(query)
@@ -92,13 +96,15 @@ func (s *PostgresStore) createCommandTable() error {
 
 func (s *PostgresStore) CreateCommand(acc *Command) error {
 	query := `insert into command 
-	(fullname, number, services, workers, start, distination)
+	(fullname, number, flor, itemtype, services, workers, start, distination)
 	values ($1, $2, $3, $4, $5, $6)`
 
 	_, err := s.db.Query(
 		query,
 		acc.FullName,
 		acc.Number,
+		acc.Flor,
+		acc.Itemtype,
 		acc.Service,
 		acc.Workers,
 		acc.Start,
@@ -254,6 +260,8 @@ func scanIntoAccount(rows *sql.Rows) (*Command, error) {
 		&command.ID,
 		&command.FullName,
 		&command.Number,
+		&command.Flor,
+		&command.Itemtype,
 		&command.Service,
 		&command.Workers,
 		&command.Start,
@@ -276,4 +284,15 @@ func scanIntoWorker(rows *sql.Rows) (*Worker, error) {
 		&worker.IsAccepted)
 
 	return worker, err
+}
+
+func (s *PostgresStore) createAdminTable() error {
+	query := `CREATE TABLE IF NOT EXISTS worker (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    admin VARCHAR(100) NOT NULL UNIQUE ,
+    password VARCHAR(100) NOT NULL ,
+);`
+
+	_, err := s.db.Exec(query)
+	return err
 }
