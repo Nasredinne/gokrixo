@@ -79,7 +79,7 @@ func (s *PostgresStore) Init() error {
 }
 
 func (s *PostgresStore) createCommandTable() error {
-	query := `create table if not exists commands (
+	query := `create table if not exists commandss (
 		id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 		fullname varchar(100) NOT NULL,
 		number varchar(100) NOT NULL,
@@ -96,7 +96,7 @@ func (s *PostgresStore) createCommandTable() error {
 }
 
 func (s *PostgresStore) CreateCommand(acc *Command) error {
-	query := `insert into commands 
+	query := `insert into commandss 
 	(fullname, number, flor, itemtype, services, workers, start, distination)
 	values ($1, $2, $3, $4, $5, $6, $7, $8)`
 
@@ -119,12 +119,12 @@ func (s *PostgresStore) CreateCommand(acc *Command) error {
 }
 
 func (s *PostgresStore) DeleteCommand(id int) error {
-	_, err := s.db.Query("delete from commands where id = $1", id)
+	_, err := s.db.Query("delete from commandss where id = $1", id)
 	return err
 }
 
 func (s *PostgresStore) GetCommands() ([]*Command, error) {
-	rows, err := s.db.Query("select * from commands ")
+	rows, err := s.db.Query("select * from commandss ")
 	if err != nil {
 		return nil, err
 	}
