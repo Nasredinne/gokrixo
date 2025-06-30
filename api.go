@@ -44,6 +44,7 @@ func enableCors(w *http.ResponseWriter) {
 }
 
 func (s *APIServer) handleCreateCommand(w http.ResponseWriter, r *http.Request) error {
+	enableCors(&w)
 	req := new(CreateCommandRequest)
 	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
 		return err
@@ -61,6 +62,8 @@ func (s *APIServer) handleCreateCommand(w http.ResponseWriter, r *http.Request) 
 }
 
 func (s *APIServer) handleGetCommands(w http.ResponseWriter, r *http.Request) error {
+	enableCors(&w)
+
 	commands, err := s.store.GetCommands()
 	if err != nil {
 		return err
@@ -70,6 +73,7 @@ func (s *APIServer) handleGetCommands(w http.ResponseWriter, r *http.Request) er
 }
 
 func (s *APIServer) handleCreateWorker(w http.ResponseWriter, r *http.Request) error {
+	enableCors(&w)
 	if r.Method != "POST" {
 		return fmt.Errorf("methode not allowed %s", r.Method)
 	}
@@ -122,6 +126,7 @@ func (s *APIServer) handleGetWorkerByID(w http.ResponseWriter, r *http.Request) 
 }
 
 func (s *APIServer) handleRegestration(w http.ResponseWriter, r *http.Request) error {
+	enableCors(&w)
 	req := new(LoginRequest)
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return err
