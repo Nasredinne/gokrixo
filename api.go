@@ -32,7 +32,7 @@ func (s *APIServer) Run() {
 	router.HandleFunc("/Regestration", corsMiddleware(makeHTTPHandleFunc(s.handleRegestration)))
 	router.HandleFunc("/account/{id}", corsMiddleware(withJWTAuth(makeHTTPHandleFunc(s.handleGetWorkerByID), s.store)))
 	router.HandleFunc("/UpdateCommand", corsMiddleware(makeHTTPHandleFunc(s.handleUpdateCommand)))
-	router.HandleFunc("/UpdateUpdate", corsMiddleware(makeHTTPHandleFunc(s.handleUpdateWorker)))
+	router.HandleFunc("/UpdateWorker", corsMiddleware(makeHTTPHandleFunc(s.handleUpdateWorker)))
 	router.HandleFunc("/DeleteCommand", corsMiddleware(makeHTTPHandleFunc(s.handleDeleteCommand)))
 	router.HandleFunc("/DeleteDataBaseTables", corsMiddleware(makeHTTPHandleFunc(s.handleDeleteDBTables)))
 	log.Println("JSON API server running on port: ", s.listenAddr)
@@ -42,7 +42,7 @@ func (s *APIServer) Run() {
 
 func enableCors(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*") // Or your frontend origin
-	(*w).Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+	(*w).Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT")
 	(*w).Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	(*w).Header().Set("Access-Control-Allow-Credentials", "true")
 }
@@ -52,7 +52,7 @@ func corsMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		// Allowed Origin
 		w.Header().Set("Access-Control-Allow-Origin", "*") // Change this to your frontend origin
 		// Allowed Methods
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT")
 		// Allowed Headers
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 
@@ -70,7 +70,11 @@ func corsMiddleware(next http.HandlerFunc) http.HandlerFunc {
 }
 
 func (s *APIServer) handleDeleteDBTables(w http.ResponseWriter, r *http.Request) error {
-	s.store.DropAllTables()
+	err := s.store.DropAllTables()
+	if err != nil {
+		return err
+	}
+
 	return WriteJSON(w, http.StatusAccepted, "TABLES DELETED")
 }
 
