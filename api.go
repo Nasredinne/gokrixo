@@ -178,10 +178,10 @@ func (s *APIServer) handleRegestration(w http.ResponseWriter, r *http.Request) e
 		return err
 	}
 
-	resp := LoginResponse{
-		Token: token,
-		ID:    worker.ID,
-	}
+	// resp := LoginResponse{
+	// 	Token: token,
+	// 	ID:    worker.ID,
+	// }
 	http.SetCookie(w, &http.Cookie{
 		Name:     "x-jwt-token",
 		Value:    token,
@@ -192,7 +192,7 @@ func (s *APIServer) handleRegestration(w http.ResponseWriter, r *http.Request) e
 		Path:     "/",
 	})
 
-	return WriteJSON(w, http.StatusOK, resp)
+	return WriteJSON(w, http.StatusOK, worker)
 }
 
 func (s *APIServer) handleUpdateCommand(w http.ResponseWriter, r *http.Request) error {
